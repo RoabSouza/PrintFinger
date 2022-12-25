@@ -1,0 +1,41 @@
+
+import cv2
+import os
+
+source_image = cv2.imread("test.tif")
+score=0
+file_name=None
+image=None
+ef6,ef7,mp=None,None,None
+
+for file in [file for file in os.listdir("database")][:3]:
+    target_image = cv2.imread("./database/" + file)
+
+    sift = cv2.SIFT.create()
+    ef6, des1 = sift.detectAndCompute(source_image, None)
+    ef7, des2 = sift.detectAndCompute(target_image, None)
+    matches = cv2.FlannBasedMatcher(dict(algorithm=1, trees=10),dict()).knnMatch(des1, des2, k=2)
+
+    mp = []
+    for p, q in matches:
+        if p.distance < 0.1 * q.distance:
+            mp.append(p)
+            keypoints = 0
+            if len(ef6) <= len(ef7):
+                keypoints = len(ef6)
+            else:
+                keypoints = len(ef7)
+
+            if len(mp) / keypoints * 100 > score:
+                score=len(mp) / keypoints * 100
+                print('The best match :'+ file)
+                print('The score :' + str(score))
+                result = cv2.drawMatches(source_image,ef6,target_image,ef7,mp,None)
+                result = cv2.resize(result, None, fx=1.5, fy=1.5)
+                cv2.imshow("result", result)
+                cv2.waitKey(0)
+                cv2.destroyAllWindows()
+                break;
+
+
+
